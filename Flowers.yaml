@@ -236,7 +236,7 @@ variables:
 
   sensors: '{% set result = namespace(sensors=[]) %} {% for state in states.plant
     | selectattr("attributes.device_class", "==", "plant") 
-    | selectattr("state","==", "ok") 
+    | selectattr("state","==", "problem") 
     | selectattr("attributes.moisture_status","!=", "High") 
     | selectattr("attributes.conductivity_status","!=","High")%} 
     {% set result.sensors = result.sensors + [state.name] %} 
