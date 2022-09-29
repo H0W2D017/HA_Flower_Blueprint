@@ -419,6 +419,8 @@ action:
               then:
               - choose: []
                 default: !input action_1
+    default:
+      - stop: The plants feel fine
   - condition: template
     value_template: "{{persistent == true}}"
   - wait_for_trigger:
