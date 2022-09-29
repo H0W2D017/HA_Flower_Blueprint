@@ -140,21 +140,20 @@ variables:
   high_threshold: !input high_threshold
   low_threshold: !input low_threshold
   forecast: !input hourly_weather_forcast
-  lowest_night_temp: 
-    "{{[states[forecast].attributes.forecast[0]['temperature'],
-          states[forecast].attributes.forecast[1]['temperature'],
-          states[forecast].attributes.forecast[2]['temperature'],
-          states[forecast].attributes.forecast[3]['temperature'],
-          states[forecast].attributes.forecast[4]['temperature'],
-          states[forecast].attributes.forecast[5]['temperature'],
-          states[forecast].attributes.forecast[6]['temperature'],
-          states[forecast].attributes.forecast[7]['temperature'],
-          states[forecast].attributes.forecast[9]['temperature'],
-          states[forecast].attributes.forecast[10]['temperature'],
-          states[forecast].attributes.forecast[11]['temperature'],
-          states[forecast].attributes.forecast[12]['temperature'],
-          states[forecast].attributes.forecast[13]['temperature'],
-          ]| min}}"
+  lowest_night_temp: "{{[states[forecast].attributes.forecast[0]['temperature'],
+    states[forecast].attributes.forecast[1]['temperature'],
+    states[forecast].attributes.forecast[2]['temperature'],
+    states[forecast].attributes.forecast[3]['temperature'],
+    states[forecast].attributes.forecast[4]['temperature'],
+    states[forecast].attributes.forecast[5]['temperature'],
+    states[forecast].attributes.forecast[6]['temperature'],
+    states[forecast].attributes.forecast[7]['temperature'],
+    states[forecast].attributes.forecast[9]['temperature'],
+    states[forecast].attributes.forecast[10]['temperature'],
+    states[forecast].attributes.forecast[11]['temperature'],
+    states[forecast].attributes.forecast[12]['temperature'],
+    states[forecast].attributes.forecast[13]['temperature'],
+    ]| min}}"
   night_temp_enabled: !input night_temp_enabled
   sensors: "{% set result = namespace(sensors=[]) %}
     {% for state in states.plant
@@ -181,7 +180,7 @@ variables:
     {% if result.sensors|join(',') != '' %}
     {{ water_text+'
 
-        '+result.sensors|join (',
+    '+result.sensors|join (',
 
     ')}}
     {% endif %}"
@@ -256,7 +255,6 @@ trigger:
       seconds: 0
     id: temp_low
 action:
-action:
   - choose:
       - conditions:
         - condition: trigger
@@ -279,47 +277,47 @@ action:
                 states[forecast].attributes.forecast[13]['temperature'],
                 ]| min < low_threshold and night_temp_enabled == true }}"
         sequence:
-          - device_id: !input device
-            domain: mobile_app
-            type: notify
-            message: |
-              {% if water != '' %}
-              {{water}}
-              {% endif -%}
-              {% if nutritions != '' %}
-              {{nutritions}}
-              {% endif -%}
-              {% if both != '' %}
-              {{both}}
-              {% endif -%}
-              {% if night_temp != '' %} \n
-              {{night_temp}}
-              {% endif -%}
-            title: "{{sensors}}"
+            - device_id: !input device
+              domain: mobile_app
+              type: notify
+              message: |
+                {% if water != '' %}
+                {{water}}
+                {% endif -%}
+                {% if nutritions != '' %}
+                {{nutritions}}
+                {% endif -%}
+                {% if both != '' %}
+                {{both}}
+                {% endif -%}
+                {% if night_temp != '' %} \n
+                {{night_temp}}
+                {% endif -%}
+              title: "{{sensors}}"
       - conditions:
           - condition: trigger
             id: temp_high
           - condition: template
             value_template: !input high_temp_enabled
         sequence:
-          - device_id: !input device
-            domain: mobile_app
-            type: notify
-            message: |-
-              The temperature have been above {{high_threshold}} for one hour,
-              the temperature is now {{states(temp_sensor)}}
-            title: High temp alarm!
+            - device_id: !input device
+              domain: mobile_app
+              type: notify
+              message: |-
+                The temperature have been above {{high_threshold}} for one hour,
+                the temperature is now {{states(temp_sensor)}}
+              title: High temp alarm!
       - conditions:
           - condition: trigger
             id: temp_low
           - condition: template
             value_template: !input low_temp_enabled
         sequence:
-          - device_id: !input device
-            domain: mobile_app
-            type: notify
-            message: |-
-              The temperature have been below {{low_threshold}} for fifteen minutes,
-              the temperature is now {{states(temp_sensor)}}
-            title: Low temp alarm!
+            - device_id: !input device
+              domain: mobile_app
+              type: notify
+              message: |-
+                The temperature have been below {{low_threshold}} for fifteen minutes,
+                the temperature is now {{states(temp_sensor)}}
+              title: Low temp alarm!
 mode: single
