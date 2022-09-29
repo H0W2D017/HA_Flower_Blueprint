@@ -305,10 +305,10 @@ trigger:
     seconds: 0
   id: temp_low
 
-# The automation itself
 action:
 - choose:
   - conditions:
+# The status message
     - condition: trigger
       id: time
     - condition: or
@@ -341,15 +341,17 @@ action:
           actions:
           - action: '{% if persistent == true %}"action_open"{% endif %}'
             title: '{% if persistent == true %}ok{% endif %}'
+# Status message, first action
       - if:
         - condition: template
           value_template: !input action_1_status
         then:
         - choose: []
           default: !input action_1
+# High temp notification
   - conditions:
-#    - condition: trigger
-#      id: temp_high
+    - condition: trigger
+      id: temp_high
     - condition: template
       value_template: !input high_temp_enabled
     sequence:
@@ -368,15 +370,17 @@ action:
           actions:
           - action: '{% if persistent == true %}"action_open"{% endif %}'
             title: '{% if persistent == true %}ok{% endif %}'
+# High temp, first action
       - if:
         - condition: template
           value_template: !input action_1_high
         then:
         - choose: []
           default: !input action_1
+# Low temp notification
   - conditions:
-#    - condition: trigger
-#      id: temp_low
+    - condition: trigger
+      id: temp_low
     - condition: template
       value_template: !input low_temp_enabled
     sequence:
@@ -395,6 +399,7 @@ action:
           actions:
           - action: '{% if persistent == true %}"action_open"{% endif %}'
             title: '{% if persistent == true %}ok{% endif %}'
+# Low temp, first action
       - if:
         - condition: template
           value_template: !input action_1_low
@@ -403,6 +408,7 @@ action:
           default: !input action_1
   default:
   - stop: The plants feel fine
+# Presistent check and wait for button press
 - condition: template
   value_template: '{{persistent == true}}'
 - wait_for_trigger:
@@ -414,18 +420,21 @@ action:
       action_1_title: ok
       action_1_key: '"action_open"'
       action: '"action_open"'
+# Second action
 - if:
   - condition: template
     value_template: !input action_2_active
   then:
   - choose: []
     default: !input action_2
+# Clear notification
 - device_id: !input device
   domain: mobile_app
   type: notify
   message: clear_notification
   data:
     tag: flowerpower
+# Third action
 - if:
   - condition: template
     value_template: !input action_3_active
