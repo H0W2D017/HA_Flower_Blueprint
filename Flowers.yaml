@@ -256,11 +256,28 @@ trigger:
       seconds: 0
     id: temp_low
 action:
+action:
   - choose:
       - conditions:
-          - "{{ sensors != '' and (day | int == 0 or day | int == now().isoweekday()) }}"
-          - condition: trigger
-            id: time
+        - condition: trigger
+          id: time
+        - condition: or
+          conditions:
+            - "{{ sensors != '' and (day | int == 0 or day | int == now().isoweekday()) }}"
+            - "{{[states[forecast].attributes.forecast[0]['temperature'],
+                states[forecast].attributes.forecast[1]['temperature'],
+                states[forecast].attributes.forecast[2]['temperature'],
+                states[forecast].attributes.forecast[3]['temperature'],
+                states[forecast].attributes.forecast[4]['temperature'],
+                states[forecast].attributes.forecast[5]['temperature'],
+                states[forecast].attributes.forecast[6]['temperature'],
+                states[forecast].attributes.forecast[7]['temperature'],
+                states[forecast].attributes.forecast[9]['temperature'],
+                states[forecast].attributes.forecast[10]['temperature'],
+                states[forecast].attributes.forecast[11]['temperature'],
+                states[forecast].attributes.forecast[12]['temperature'],
+                states[forecast].attributes.forecast[13]['temperature'],
+                ]| min < low_threshold and night_temp_enabled == true }}"
         sequence:
           - device_id: !input device
             domain: mobile_app
