@@ -327,8 +327,8 @@ trigger:
 action:
   - choose:
       - conditions:
-#        - condition: trigger
-#          id: time
+        - condition: trigger
+          id: time
         - condition: or
           conditions:
             - "{{ sensors != '' and (day | int == 0 or day | int == now().isoweekday()) }}"
