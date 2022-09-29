@@ -4,7 +4,7 @@ blueprint:
   domain: automation
   input:
     device:
-      name: device
+      name: Device
       description: Pick a device to send the notification to
       default:
         entity_id: []
@@ -95,7 +95,7 @@ blueprint:
         boolean:
       default: false
     hourly_weather_forcast:
-      name: weather
+      name: Weather
       description: |-
         The hourly weather sensor you want to use for the night notification,
         Requires Met.no (the standard integration in HA) and "home houerly" sensor needs to be activated
@@ -103,7 +103,7 @@ blueprint:
         entity:
           domain: weather
     temp_sensor:
-      name: temp sensor
+      name: Temp sensor
       description: Choose the temperature sensor to use for the temp alarms.
       default:
         entity_id: []
@@ -133,6 +133,73 @@ blueprint:
           unit_of_measurement: "°C"
           mode: slider
           step: 1
+    persistent:
+      name: Persistent & actionable
+      description: turn this on if you want a persistent and actionable notification
+      selector:
+        boolean:
+      default: false
+    channel:
+      name: Channel
+      description: The channel to use for the persistant notification, this is usefull if you want a diffrent notification sound on your mobile device.
+      selector:
+        text:
+      default: General
+    action_1:
+      name: First action
+      description: |-
+        Action to be run when you get the notification.
+        As an example run a script or turn on a lamp
+      selector:
+        action: {}
+      default: []
+    action_1_status:
+      name: Run First action when the plants have a problem
+      description: turn this on if you want to run First action when the plants have a problem
+      selector:
+        boolean:
+      default: false
+    action_1_high:
+      name: Run First action when the temperature high triggers
+      description: turn this on if you want to run First action when the temperature high triggers
+      selector:
+        boolean:
+      default: false
+    action_1_low:
+      name: Run First action when the temperature low triggers
+      description: turn this on if you want to run First action when the temperature low triggers
+      selector:
+        boolean:
+      default: false
+    action_2:
+      name: Second action
+      description: |-
+        Action to be run when you push the button before the notification is cleared.
+        As an example turn on a script or an input_bool.
+      selector:
+        action: {}
+      default: []
+    action_2_active:
+      name: Enable the second action
+      description: Turn this on if you want to activate the Second action
+      selector:
+        boolean:
+      default: false
+    action_3:
+      name: Third action
+      description: |-
+        Action to be run after the notification is cleared.
+        As an example wait for a script to finish or turn off the input_bool from the Second action
+      selector:
+        action: {}
+      default: []
+    action_3_active:
+      name: Enable the second action
+      description: Turn this on if you want to activate the Third action
+      selector:
+        boolean:
+      default: false
+
 variables:
   day: !input day
   exclude: !input exclude
@@ -140,6 +207,9 @@ variables:
   high_threshold: !input high_threshold
   low_threshold: !input low_threshold
   forecast: !input hourly_weather_forcast
+  persistent: !input persistent
+  channel: !input channel
+  action_1: !input action_1
   lowest_night_temp: "{{[states[forecast].attributes.forecast[0]['temperature'],
     states[forecast].attributes.forecast[1]['temperature'],
     states[forecast].attributes.forecast[2]['temperature'],
@@ -257,8 +327,8 @@ trigger:
 action:
   - choose:
       - conditions:
-        - condition: trigger
-          id: time
+#        - condition: trigger
+#          id: time
         - condition: or
           conditions:
             - "{{ sensors != '' and (day | int == 0 or day | int == now().isoweekday()) }}"
@@ -277,6 +347,7 @@ action:
                 states[forecast].attributes.forecast[13]['temperature'],
                 ]| min < low_threshold and night_temp_enabled == true }}"
         sequence:
+          - parallel:
             - device_id: !input device
               domain: mobile_app
               type: notify
@@ -294,12 +365,27 @@ action:
                 {{night_temp}}
                 {% endif -%}
               title: "{{sensors}}"
+              data:
+                tag: '{% if persistent == true %}flowerpower{% endif %}'
+                persistent: '{{persistent}}'
+                sticky: '{{persistent}}'
+                channel: '{{channel}}'
+                actions:
+                  - action: '{% if persistent == true %}"action_open"{% endif %}'
+                    title: '{% if persistent == true %}ok{% endif %}'
+            - if:
+                - condition: template
+                  value_template: !input action_1_status 
+              then:
+              - choose: []
+                default: !input action_1
       - conditions:
           - condition: trigger
             id: temp_high
           - condition: template
             value_template: !input high_temp_enabled
         sequence:
+          - parallel:
             - device_id: !input device
               domain: mobile_app
               type: notify
@@ -307,12 +393,19 @@ action:
                 The temperature have been above {{high_threshold}} for one hour,
                 the temperature is now {{states(temp_sensor)}}
               title: High temp alarm!
+            - if:
+                - condition: template
+                  value_template: !input action_1_high 
+              then:
+              - choose: []
+                default: !input action_1
       - conditions:
           - condition: trigger
             id: temp_low
           - condition: template
             value_template: !input low_temp_enabled
         sequence:
+          - parallel:
             - device_id: !input device
               domain: mobile_app
               type: notify
@@ -320,4 +413,39 @@ action:
                 The temperature have been below {{low_threshold}} for fifteen minutes,
                 the temperature is now {{states(temp_sensor)}}
               title: Low temp alarm!
+            - if:
+                - condition: template
+                  value_template: !input action_1_low 
+              then:
+              - choose: []
+                default: !input action_1
+  - condition: template
+    value_template: "{{persistent == true}}"
+  - wait_for_trigger:
+    - platform: event
+      event_type: mobile_app_notification_action
+      event_data:
+        tag: flowerpower
+        channel: '{{channel}}'
+        action_1_title: ok
+        action_1_key: "\"action_open\""
+        action: "\"action_open\""
+  - if:
+    - condition: template
+      value_template: !input action_2_active
+    then:
+    - choose: []
+      default: !input action_2
+  - device_id: !input device
+    domain: mobile_app
+    type: notify
+    message: clear_notification
+    data:
+      tag: flowerpower
+  - if:
+    - condition: template
+      value_template: !input action_3_active
+    then:
+    - choose: []
+      default: !input action_3
 mode: single
