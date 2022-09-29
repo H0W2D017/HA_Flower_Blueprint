@@ -41,7 +41,7 @@ blueprint:
             value: '7'
           custom_value: false
           multiple: false
-      default: Every day
+      default: '0'
     exclude:
       name: Excluded Sensors
       description: Plants to exclude from detection. Only entities are supported,
@@ -93,17 +93,16 @@ blueprint:
       name: Night temp alarm
       description: "Turn on to activate an alarm when the temperature in the next
         12 hours will fall below the low treshold.\nUsefull for when you have plants
-        outside that can't handle cold weather that well. \nRemember to turn this
+        outside that can't handle cold weather that well. \n\nRemember to turn this
         off incase you bring your plants inside for the winter"
       selector:
         boolean: {}
       default: false
     hourly_weather_forcast:
       name: Weather
-      description: 'The hourly weather sensor you want to use for the night notification,
-      
-        Requires Met.no (the standard integration in HA) and "home houerly" sensor
-        needs to be activated'
+      description: "The hourly weather sensor you want to use for the night notification,
+        \n Requires Met.no (the standard integration in HA) and home houerly sensor
+        needs to be activated"
       selector:
         entity:
           domain: weather
@@ -118,8 +117,7 @@ blueprint:
           multiple: false
     high_threshold:
       name: High temp level threshold
-      description: Treshhold for high temp alarm, if the specified sensor is above
-        this value then you will get a notification.
+      description: "Treshhold for high temp alarm, \n if the specified sensor is above this value then you will get a notification."
       default: 35
       selector:
         number:
@@ -130,8 +128,7 @@ blueprint:
           step: 1.0
     low_threshold:
       name: Low temp level threshold
-      description: Treshhold for low temp alarm, if the specified sensor is above
-        this value then you will get a notification.
+      description: "Treshhold for low temp alarm, \n if the specified sensor is above this value then you will get a notification."
       default: 8
       selector:
         number:
@@ -148,16 +145,14 @@ blueprint:
       default: false
     channel:
       name: Channel
-      description: The channel to use for the persistant notification, this is usefull
-        if you want a diffrent notification sound on your mobile device.
+      description: "The channel to use for the persistant notification, \nthis is usefull if you want a diffrent notification sound on your mobile device."
       selector:
-        text: {}
+        text:
+          multiline: false
       default: General
     action_1:
       name: First action
-      description: 'Action to be run when you get the notification.
-
-        As an example run a script or turn on a lamp'
+      description: "Action to be run when you get the notification. \nAs an example run a script or turn on a lamp"
       selector:
         action: {}
       default: []
@@ -184,10 +179,8 @@ blueprint:
       default: false
     action_2:
       name: Second action
-      description: 'Action to be run when you push the button before the notification
-        is cleared.
-
-        As an example turn on a script or an input_bool.'
+      description: "Action to be run when you push the button before the notification
+        is cleared. \nAs an example turn on a script or an input_bool."
       selector:
         action: {}
       default: []
@@ -199,10 +192,8 @@ blueprint:
       default: false
     action_3:
       name: Third action
-      description: 'Action to be run after the notification is cleared.
-
-        As an example wait for a script to finish or turn off the input_bool from
-        the Second action'
+      description: "Action to be run after the notification is cleared. \nAs an example wait for a script to finish or turn off the input_bool from
+        the Second action"
       selector:
         action: {}
       default: []
@@ -223,65 +214,79 @@ variables:
   persistent: !input persistent
   channel: !input channel
   action_1: !input action_1
-  lowest_night_temp: '{{[states[forecast].attributes.forecast[0][''temperature''],
-    states[forecast].attributes.forecast[1][''temperature''], states[forecast].attributes.forecast[2][''temperature''],
-    states[forecast].attributes.forecast[3][''temperature''], states[forecast].attributes.forecast[4][''temperature''],
-    states[forecast].attributes.forecast[5][''temperature''], states[forecast].attributes.forecast[6][''temperature''],
-    states[forecast].attributes.forecast[7][''temperature''], states[forecast].attributes.forecast[9][''temperature''],
-    states[forecast].attributes.forecast[10][''temperature''], states[forecast].attributes.forecast[11][''temperature''],
-    states[forecast].attributes.forecast[12][''temperature''], states[forecast].attributes.forecast[13][''temperature''],
-    ]| min}}'
   night_temp_enabled: !input night_temp_enabled
-  sensors: '{% set result = namespace(sensors=[]) %} {% for state in states.plant
-    | selectattr(''attributes.device_class'', ''=='', ''plant'') | selectattr(''state'',''=='',
-    ''problem'') | selectattr(''attributes.moisture_status'',''!='', ''High'') | selectattr(''attributes.conductivity_status'',''!='',
-    ''High'')%} {% set result.sensors = result.sensors + [state.name] %} {% endfor
-    %} {{result.sensors| join('', '')}}'
-  water_text: !input water_text
   nutritions_text: !input nutritions_text
+  water_text: !input water_text
   both_text: !input both_text
-  water: '{% set result = namespace(sensors=[]) %} {% for state in states.plant |
-    selectattr(''attributes.moisture_status'', ''defined'') | selectattr(''attributes.device_class'',
-    ''=='', ''plant'') | selectattr(''attributes.moisture_status'',''=='', ''Low'')
-    | selectattr(''attributes.conductivity_status'',''=='', ''ok'')%} {% set result.sensors
-    = result.sensors + [state.name]%} {% endfor %} {% if result.sensors|join('','')
-    != '''' %} {{ water_text+''
 
-    ''+result.sensors|join ('',
+  lowest_night_temp: '{{[states[forecast].attributes.forecast[0]["temperature"],
+    states[forecast].attributes.forecast[1]["temperature"], 
+    states[forecast].attributes.forecast[2]["temperature"],
+    states[forecast].attributes.forecast[3]["temperature"], 
+    states[forecast].attributes.forecast[4]["temperature"],
+    states[forecast].attributes.forecast[5]["temperature"], 
+    states[forecast].attributes.forecast[6]["temperature"],
+    states[forecast].attributes.forecast[7]["temperature"], 
+    states[forecast].attributes.forecast[9]["temperature"],
+    states[forecast].attributes.forecast[10]["temperature"], 
+    states[forecast].attributes.forecast[11]["temperature"],
+    states[forecast].attributes.forecast[12]["temperature"], 
+    states[forecast].attributes.forecast[13]["temperature"],
+    ]| min}}'
 
-    '')}} {% endif %}'
+  sensors: '{% set result = namespace(sensors=[]) %} {% for state in states.plant
+    | selectattr("attributes.device_class", "==", "plant") 
+    | selectattr("state","==", "ok") 
+    | selectattr("attributes.moisture_status","!=", "High") 
+    | selectattr("attributes.conductivity_status","!=","High")%} 
+    {% set result.sensors = result.sensors + [state.name] %} 
+    {% endfor %} 
+    {{result.sensors| join(", ")}}'
+
+  water: '{% set result = namespace(sensors=[]) %} {% for state in states.plant
+    | selectattr("attributes.moisture_status", "defined") 
+    | selectattr("attributes.device_class","==", "plant") 
+    | selectattr("attributes.moisture_status","==", "Low")
+    | selectattr("attributes.conductivity_status","==", "ok")%} 
+    {% set result.sensors = result.sensors + [state.name]%} 
+    {% endfor %} 
+    {% if result.sensors|join(",") != "" %} 
+    {{water_text+"\n"+result.sensors|join (",\n")}}
+    {% endif %}'
+
   nutritions: '{% set result = namespace(sensors=[]) %} {% for state in states.plant
-    | selectattr(''attributes.moisture_status'', ''defined'') | selectattr(''attributes.device_class'',
-    ''=='', ''plant'') | selectattr(''attributes.moisture_status'',''=='', ''ok'')
-    | selectattr(''attributes.conductivity_status'',''=='', ''Low'')%} {% set result.sensors
-    = result.sensors + [state.name]%} {% endfor %} {% if result.sensors|join('','')
-    != '''' %} {{nutritions_text+''
+    | selectattr("attributes.moisture_status", "defined") 
+    | selectattr("attributes.device_class", "==", "plant") 
+    | selectattr("attributes.moisture_status","==", "ok")
+    | selectattr("attributes.conductivity_status","==", "Low")%} 
+    {% set result.sensors = result.sensors + [state.name]%} 
+    {% endfor %} 
+    {% if result.sensors|join(",") != "" %} 
+    {{nutritions_text+"\n"+result.sensors|join(",\n")}} 
+    {% endif %}'
 
-    ''+result.sensors|join('',
+  both: '{% set result = namespace(sensors=[]) %} {% for state in states.plant 
+    | selectattr("attributes.moisture_status", "defined") 
+    | selectattr("attributes.device_class", "==", "plant") 
+    | selectattr("attributes.moisture_status","==","Low") 
+    | selectattr("attributes.conductivity_status","==", "Low")%} 
+    {%set result.sensors = result.sensors + [state.name]%} 
+    {% endfor %} 
+    {% if result.sensors|join(",") != "" %} 
+    {{both_text+"\n"+result.sensors|join(",\n")}} 
+    {% endif %}'
 
-    '')}} {% endif %}'
-  both: '{% set result = namespace(sensors=[]) %} {% for state in states.plant | selectattr(''attributes.moisture_status'',
-    ''defined'') | selectattr(''attributes.device_class'', ''=='', ''plant'') | selectattr(''attributes.moisture_status'',''=='',
-    ''Low'') | selectattr(''attributes.conductivity_status'',''=='', ''Low'')%} {%
-    set result.sensors = result.sensors + [state.name]%} {% endfor %} {% if result.sensors|join('','')
-    != '''' %} {{both_text+''
+  night_temp: '{% if lowest_night_temp < low_threshold
+    and night_temp_enabled == true %} 
+    The temperature will be below {{low_threshold | int}}°C, and at it`s lowest point it will be {{lowest_night_temp}}°C 
+    {%endif%}'
 
-    ''+result.sensors|join('',
-
-    '')}} {% endif %}'
-  night_temp: '{% if [states[forecast].attributes.forecast[0][''temperature''], states[forecast].attributes.forecast[1][''temperature''],
-    states[forecast].attributes.forecast[2][''temperature''], states[forecast].attributes.forecast[3][''temperature''],
-    states[forecast].attributes.forecast[4][''temperature''], states[forecast].attributes.forecast[5][''temperature''],
-    states[forecast].attributes.forecast[6][''temperature''], states[forecast].attributes.forecast[7][''temperature''],
-    states[forecast].attributes.forecast[9][''temperature''], states[forecast].attributes.forecast[10][''temperature''],
-    states[forecast].attributes.forecast[11][''temperature''], states[forecast].attributes.forecast[12][''temperature''],
-    states[forecast].attributes.forecast[13][''temperature''], ]| min < low_threshold
-    and night_temp_enabled == true %} The temperature will be below {{low_threshold
-    | int}}°C, and at it''s lowest point it will be {{lowest_night_temp}}°C {%endif%}'
+# The triggers for the automation
 trigger:
 - platform: time
   at: !input time
   id: time
+
 - platform: numeric_state
   entity_id: !input temp_sensor
   above: !input high_threshold
@@ -290,6 +295,7 @@ trigger:
     minutes: 0
     seconds: 0
   id: temp_high
+
 - platform: numeric_state
   entity_id: !input temp_sensor
   below: !input low_threshold
@@ -298,6 +304,8 @@ trigger:
     minutes: 15
     seconds: 0
   id: temp_low
+
+# The automation itself
 action:
 - choose:
   - conditions:
@@ -305,46 +313,25 @@ action:
       id: time
     - condition: or
       conditions:
-      - '{{ sensors != '''' and (day | int == 0 or day | int == now().isoweekday())
-        }}'
-      - '{{[states[forecast].attributes.forecast[0][''temperature''], states[forecast].attributes.forecast[1][''temperature''],
-        states[forecast].attributes.forecast[2][''temperature''], states[forecast].attributes.forecast[3][''temperature''],
-        states[forecast].attributes.forecast[4][''temperature''], states[forecast].attributes.forecast[5][''temperature''],
-        states[forecast].attributes.forecast[6][''temperature''], states[forecast].attributes.forecast[7][''temperature''],
-        states[forecast].attributes.forecast[9][''temperature''], states[forecast].attributes.forecast[10][''temperature''],
-        states[forecast].attributes.forecast[11][''temperature''], states[forecast].attributes.forecast[12][''temperature''],
-        states[forecast].attributes.forecast[13][''temperature''], ]| min < low_threshold
-        and night_temp_enabled == true }}'
+      - '{{ sensors != "" and (day | int == 0 or day | int == now().isoweekday())}}'
+      - '{{lowest_night_temp < low_threshold and night_temp_enabled == true }}'
     sequence:
     - parallel:
       - device_id: !input device
         domain: mobile_app
         type: notify
-        message: '{% if water != '''' %}
-
+        message: '{% if water != "" %}
           {{water}}
-
           {% endif -%}
-
-          {% if nutritions != '''' %}
-
-          {{nutritions}}
-
+          {% if nutritions != "" %}
+          \n\n{{nutritions}}
           {% endif -%}
-
-          {% if both != '''' %}
-
-          {{both}}
-
+          {% if both != "" %}
+          \n\n{{both}}
           {% endif -%}
-
-          {% if night_temp != '''' %} \n
-
-          {{night_temp}}
-
-          {% endif -%}
-
-          '
+          {% if night_temp != "" %}
+          \n\n{{night_temp}}
+          {% endif -%}'
         title: '{{sensors}}'
         data:
           tag: '{% if persistent == true %}flowerpower{% endif %}'
@@ -361,8 +348,8 @@ action:
         - choose: []
           default: !input action_1
   - conditions:
-    - condition: trigger
-      id: temp_high
+#    - condition: trigger
+#      id: temp_high
     - condition: template
       value_template: !input high_temp_enabled
     sequence:
@@ -370,10 +357,17 @@ action:
       - device_id: !input device
         domain: mobile_app
         type: notify
-        message: 'The temperature have been above {{high_threshold}} for one hour,
-
-          the temperature is now {{states(temp_sensor)}}'
+        message: "The temperature have been above {{high_threshold}} for one hour,\n
+        the temperature is now {{states(temp_sensor)}}"
         title: High temp alarm!
+        data:
+          tag: '{% if persistent == true %}flowerpower{% endif %}'
+          persistent: '{{persistent}}'
+          sticky: '{{persistent}}'
+          channel: '{{channel}}'
+          actions:
+          - action: '{% if persistent == true %}"action_open"{% endif %}'
+            title: '{% if persistent == true %}ok{% endif %}'
       - if:
         - condition: template
           value_template: !input action_1_high
@@ -381,8 +375,8 @@ action:
         - choose: []
           default: !input action_1
   - conditions:
-    - condition: trigger
-      id: temp_low
+#    - condition: trigger
+#      id: temp_low
     - condition: template
       value_template: !input low_temp_enabled
     sequence:
@@ -390,10 +384,17 @@ action:
       - device_id: !input device
         domain: mobile_app
         type: notify
-        message: 'The temperature have been below {{low_threshold}} for fifteen minutes,
-
-          the temperature is now {{states(temp_sensor)}}'
+        message: "The temperature have been below {{low_threshold}} for fifteen minutes,\n
+          the temperature is now {{states(temp_sensor)}}"
         title: Low temp alarm!
+        data:
+          tag: '{% if persistent == true %}flowerpower{% endif %}'
+          persistent: '{{persistent}}'
+          sticky: '{{persistent}}'
+          channel: '{{channel}}'
+          actions:
+          - action: '{% if persistent == true %}"action_open"{% endif %}'
+            title: '{% if persistent == true %}ok{% endif %}'
       - if:
         - condition: template
           value_template: !input action_1_low
